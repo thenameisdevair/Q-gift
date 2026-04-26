@@ -1,80 +1,66 @@
 /** @type {import('tailwindcss').Config} */
 const config = {
-  darkMode: ["class"],
-  content: [
-    "./src/pages/**/*.{ts,tsx}",
-    "./src/components/**/*.{ts,tsx}",
-    "./src/app/**/*.{ts,tsx}",
-    "./src/features/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
-  ],
-  prefix: "",
+  content: ["./src/app/**/*.{ts,tsx}", "./src/components/**/*.{ts,tsx}", "./src/lib/**/*.{ts,tsx}"],
   theme: {
-    container: {
-      center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
-    },
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "#07955F",
-          foreground: "#FFFFFF",
-        },
-        secondary: {
-          DEFAULT: "#2A2C34",
-          foreground: "#FFFFFF",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
+        bg: "var(--bg)",
+        surface: "var(--surface)",
+        "surface-2": "var(--surface-2)",
+        border: "var(--border)",
+        text: "var(--text)",
+        "text-muted": "var(--text-muted)",
+        "text-soft": "var(--text-soft)",
+        "ice-tea": "var(--ice-tea)",
+        "ice-tea-ink": "var(--ice-tea-ink)",
+        gold: "var(--gold)",
+        "gold-deep": "var(--gold-deep)",
+      },
+      fontFamily: {
+        display: ["var(--font-display)", "ui-serif", "Georgia", "serif"],
+        body: ["var(--font-body)", "ui-sans-serif", "system-ui", "sans-serif"],
+      },
+      fontSize: {
+        caption: ["0.75rem", { lineHeight: "1.4", letterSpacing: "0.08em" }],
+        meta: ["0.875rem", { lineHeight: "1.45" }],
+        body: ["1rem", { lineHeight: "1.55" }],
+        lead: ["1.25rem", { lineHeight: "1.45", letterSpacing: "-0.005em" }],
+        title: ["1.625rem", { lineHeight: "1.2", letterSpacing: "-0.01em" }],
+        "display-sm": ["2.25rem", { lineHeight: "1.1", letterSpacing: "-0.015em" }],
+        display: ["3.5rem", { lineHeight: "1.02", letterSpacing: "-0.02em" }],
+      },
+      letterSpacing: {
+        caption: "0.08em",
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        sm: "0.375rem",
+        DEFAULT: "0.625rem",
+        lg: "1rem",
+        xl: "1.5rem",
+        "2xl": "2rem",
+      },
+      transitionTimingFunction: {
+        "out-quart": "cubic-bezier(0.25, 1, 0.5, 1)",
+        "out-expo": "cubic-bezier(0.16, 1, 0.3, 1)",
       },
       keyframes: {
-        "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
+        rise: {
+          from: { opacity: "0", transform: "translateY(8px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
         },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
+        bloom: {
+          "0%": { opacity: "0", transform: "scale(0.96)" },
+          "60%": { opacity: "1" },
+          "100%": { opacity: "1", transform: "scale(1)" },
         },
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
+        rise: "rise 360ms cubic-bezier(0.25, 1, 0.5, 1) both",
+        bloom: "bloom 480ms cubic-bezier(0.16, 1, 0.3, 1) both",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [],
 };
 
 module.exports = config;
