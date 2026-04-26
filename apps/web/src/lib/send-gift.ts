@@ -55,31 +55,22 @@ export async function sendGift({
 
   await publicClient.waitForTransactionReceipt({ hash: approveTxHash });
 
-  const sendGiftData = encodeFunctionData({
+  const { request } = await publicClient.simulateContract({
+    account: address,
+    address: QGIFT_ADDRESS,
     abi: QGIFT_ABI,
     functionName: "sendGift",
     args: [recipient, amountWei, occasion, message],
   });
 
-  const gasLimit = await publicClient.estimateGas({
-    account: address,
-    to: QGIFT_ADDRESS,
-    data: sendGiftData,
-  });
-
-  const giftTxHash = await walletClient.sendTransaction({
-    account: address,
-    to: QGIFT_ADDRESS,
-    data: sendGiftData,
-    gas: gasLimit,
-  });
+  const giftTxHash = await walletClient.writeContract(request);
 
   const receipt = await publicClient.waitForTransactionReceipt({
     hash: giftTxHash,
   });
 
   if (receipt.status !== "success") {
-    throw new Error("sendGift transaction reverted.");
+    throw new Error("Gift transaction failed");
   }
 
   return giftTxHash;
