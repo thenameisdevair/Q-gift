@@ -42,28 +42,38 @@ export async function sendGift({
   if (!address) throw new Error("No wallet account.");
   const amountWei = parseUnits(amount, 18);
 
+  const celoBalance = await publicClient.getBalance({ address });
+  const hasCelo = celoBalance > 0n;
+
+  const feeProps = hasCelo
+    ? {}
+    : { feeCurrency: CUSD_ADDRESS as `0x${string}` };
+
   const approveTxHash = await walletClient.sendTransaction({
     account: address,
-    to: CUSD_ADDRESS,
+    to: CUSD_ADDRESS as `0x${string}`,
     data: encodeFunctionData({
       abi: CUSD_ABI,
       functionName: "approve",
       args: [QGIFT_ADDRESS, amountWei],
     }),
-    feeCurrency: CUSD_ADDRESS,
+    gas: 100000n,
+    ...feeProps,
   } as Parameters<typeof walletClient.sendTransaction>[0]);
 
   await publicClient.waitForTransactionReceipt({ hash: approveTxHash });
 
-  const { request } = await publicClient.simulateContract({
+  const giftTxHash = await walletClient.sendTransaction({
     account: address,
-    address: QGIFT_ADDRESS,
-    abi: QGIFT_ABI,
-    functionName: "sendGift",
-    args: [recipient, amountWei, occasion, message],
-  });
-
-  const giftTxHash = await walletClient.writeContract(request);
+    to: QGIFT_ADDRESS as `0x${string}`,
+    data: encodeFunctionData({
+      abi: QGIFT_ABI,
+      functionName: "sendGift",
+      args: [recipient, amountWei, occasion, message],
+    }),
+    gas: 100000n,
+    ...feeProps,
+  } as Parameters<typeof walletClient.sendTransaction>[0]);
 
   const receipt = await publicClient.waitForTransactionReceipt({
     hash: giftTxHash,
