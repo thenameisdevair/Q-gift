@@ -1,6 +1,13 @@
 "use client";
 
-import { createPublicClient, createWalletClient, custom, encodeFunctionData, parseUnits } from "viem";
+import {
+  createPublicClient,
+  createWalletClient,
+  custom,
+  encodeFunctionData,
+  http,
+  parseUnits,
+} from "viem";
 import { celo } from "viem/chains";
 import { CUSD_ABI, CUSD_ADDRESS, QGIFT_ABI, QGIFT_ADDRESS } from "./contracts";
 
@@ -20,15 +27,17 @@ export async function sendGift({
   if (typeof window === "undefined" || !window.ethereum) {
     throw new Error("No wallet provider available.");
   }
-  const provider = window.ethereum as unknown as Parameters<typeof custom>[0];
-  const walletClient = createWalletClient({
-    chain: celo,
-    transport: custom(provider),
-  });
+
   const publicClient = createPublicClient({
     chain: celo,
-    transport: custom(provider),
+    transport: http(),
   });
+
+  const walletClient = createWalletClient({
+    chain: celo,
+    transport: custom(window.ethereum as unknown as Parameters<typeof custom>[0]),
+  });
+
   const [address] = await walletClient.getAddresses();
   if (!address) throw new Error("No wallet account.");
   const amountWei = parseUnits(amount, 18);
@@ -42,24 +51,36 @@ export async function sendGift({
       args: [QGIFT_ADDRESS, amountWei],
     }),
     feeCurrency: CUSD_ADDRESS,
-    type: "legacy",
   } as Parameters<typeof walletClient.sendTransaction>[0]);
 
   await publicClient.waitForTransactionReceipt({ hash: approveTxHash });
 
-  const hash = await walletClient.sendTransaction({
+  const sendGiftData = encodeFunctionData({
+    abi: QGIFT_ABI,
+    functionName: "sendGift",
+    args: [recipient, amountWei, occasion, message],
+  });
+
+  const gasLimit = await publicClient.estimateGas({
     account: address,
     to: QGIFT_ADDRESS,
-    data: encodeFunctionData({
-      abi: QGIFT_ABI,
-      functionName: "sendGift",
-      args: [recipient, amountWei, occasion, message],
-    }),
-    feeCurrency: CUSD_ADDRESS,
-    type: "legacy",
-  } as Parameters<typeof walletClient.sendTransaction>[0]);
+    data: sendGiftData,
+  });
 
-  await publicClient.waitForTransactionReceipt({ hash });
+  const giftTxHash = await walletClient.sendTransaction({
+    account: address,
+    to: QGIFT_ADDRESS,
+    data: sendGiftData,
+    gas: gasLimit,
+  });
 
-  return hash;
+  const receipt = await publicClient.waitForTransactionReceipt({
+    hash: giftTxHash,
+  });
+
+  if (receipt.status !== "success") {
+    throw new Error("sendGift transaction reverted.");
+  }
+
+  return giftTxHash;
 }
