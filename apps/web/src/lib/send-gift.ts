@@ -1,6 +1,6 @@
 "use client";
 
-import { createWalletClient, custom, encodeFunctionData, parseUnits } from "viem";
+import { createPublicClient, createWalletClient, custom, encodeFunctionData, parseUnits } from "viem";
 import { celo } from "viem/chains";
 import { CUSD_ABI, CUSD_ADDRESS, QGIFT_ABI, QGIFT_ADDRESS } from "./contracts";
 
@@ -20,15 +20,20 @@ export async function sendGift({
   if (typeof window === "undefined" || !window.ethereum) {
     throw new Error("No wallet provider available.");
   }
+  const provider = window.ethereum as unknown as Parameters<typeof custom>[0];
   const walletClient = createWalletClient({
     chain: celo,
-    transport: custom(window.ethereum as unknown as Parameters<typeof custom>[0]),
+    transport: custom(provider),
+  });
+  const publicClient = createPublicClient({
+    chain: celo,
+    transport: custom(provider),
   });
   const [address] = await walletClient.getAddresses();
   if (!address) throw new Error("No wallet account.");
   const amountWei = parseUnits(amount, 18);
 
-  await walletClient.sendTransaction({
+  const approveTxHash = await walletClient.sendTransaction({
     account: address,
     to: CUSD_ADDRESS,
     data: encodeFunctionData({
@@ -39,6 +44,8 @@ export async function sendGift({
     feeCurrency: CUSD_ADDRESS,
     type: "legacy",
   } as Parameters<typeof walletClient.sendTransaction>[0]);
+
+  await publicClient.waitForTransactionReceipt({ hash: approveTxHash });
 
   const hash = await walletClient.sendTransaction({
     account: address,
@@ -51,6 +58,8 @@ export async function sendGift({
     feeCurrency: CUSD_ADDRESS,
     type: "legacy",
   } as Parameters<typeof walletClient.sendTransaction>[0]);
+
+  await publicClient.waitForTransactionReceipt({ hash });
 
   return hash;
 }
