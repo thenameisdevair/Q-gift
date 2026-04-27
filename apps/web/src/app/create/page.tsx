@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useState } from "react";
+import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { isMiniPay, requestMiniPayAddress } from "@/lib/minipay";
@@ -312,6 +313,8 @@ function FormScreen(props: {
             })}
           </div>
         </Field>
+
+        <FormFooter />
       </form>
 
       <div
@@ -323,6 +326,36 @@ function FormScreen(props: {
         </Button>
       </div>
     </main>
+  );
+}
+
+function FormFooter() {
+  return (
+    <footer
+      className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-caption uppercase tracking-wide text-[var(--text-soft)] animate-rise"
+      style={{ animationDelay: "300ms" }}
+    >
+      <Link
+        href="/terms"
+        className="hover:text-[var(--ice-tea)] transition-colors duration-150"
+      >
+        Terms of Service
+      </Link>
+      <span aria-hidden className="opacity-40">·</span>
+      <Link
+        href="/privacy"
+        className="hover:text-[var(--ice-tea)] transition-colors duration-150"
+      >
+        Privacy Policy
+      </Link>
+      <span aria-hidden className="opacity-40">·</span>
+      <a
+        href="mailto:support@qgift.app"
+        className="hover:text-[var(--ice-tea)] transition-colors duration-150"
+      >
+        Support
+      </a>
+    </footer>
   );
 }
 
