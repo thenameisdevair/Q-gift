@@ -18,6 +18,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        <meta
+          name="talentapp:project_verification"
+          content="438ea8fcb993dcf93f0ad7f510d290ec72608b73c50b657430d6b2ea0cc97927fce82a9c4ef7382a8e87fc64bd3371e33e5b4a000cdd71ad6087a15f180ff1f7"
+        />
         <link rel="preconnect" href="https://api.fontshare.com" crossOrigin="" />
         <link
           rel="stylesheet"
