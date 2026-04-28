@@ -9,7 +9,7 @@ import {
   parseUnits,
 } from "viem";
 import { celo } from "viem/chains";
-import { CUSD_ADDRESS } from "./contracts";
+import { CUSD_ABI, CUSD_ADDRESS, QGIFT_ABI, QGIFT_ADDRESS } from "./contracts";
 
 export type SendGiftArgs = {
   recipient: `0x${string}`;
@@ -21,6 +21,8 @@ export type SendGiftArgs = {
 export async function sendGift({
   recipient,
   amount,
+  occasion,
+  message,
 }: SendGiftArgs): Promise<`0x${string}`> {
   if (typeof window === "undefined" || !window.ethereum) {
     throw new Error("No wallet provider available.");
@@ -40,36 +42,45 @@ export async function sendGift({
   if (!address) throw new Error("No wallet account.");
   const amountWei = parseUnits(amount, 18);
 
-  const transferTxHash = await walletClient.sendTransaction({
+  const approveHash = await walletClient.sendTransaction({
     account: address,
-    to: CUSD_ADDRESS as `0x${string}`,
+    to: CUSD_ADDRESS,
     data: encodeFunctionData({
-      abi: [
-        {
-          inputs: [
-            { internalType: "address", name: "recipient", type: "address" },
-            { internalType: "uint256", name: "amount", type: "uint256" },
-          ],
-          name: "transfer",
-          outputs: [{ internalType: "bool", name: "", type: "bool" }],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-      ],
-      functionName: "transfer",
-      args: [recipient, amountWei],
+      abi: CUSD_ABI,
+      functionName: "approve",
+      args: [QGIFT_ADDRESS, amountWei],
     }),
-    feeCurrency: CUSD_ADDRESS as `0x${string}`,
-    gas: 100000n,
-  } as Parameters<typeof walletClient.sendTransaction>[0]);
+    feeCurrency: CUSD_ADDRESS,
+    type: "legacy",
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any);
 
-  const receipt = await publicClient.waitForTransactionReceipt({
-    hash: transferTxHash,
+  const approveReceipt = await publicClient.waitForTransactionReceipt({
+    hash: approveHash,
   });
-
-  if (receipt.status !== "success") {
-    throw new Error("Gift transfer failed");
+  if (approveReceipt.status !== "success") {
+    throw new Error("cUSD approve failed");
   }
 
-  return transferTxHash;
+  const giftHash = await walletClient.sendTransaction({
+    account: address,
+    to: QGIFT_ADDRESS,
+    data: encodeFunctionData({
+      abi: QGIFT_ABI,
+      functionName: "sendGift",
+      args: [recipient, amountWei, occasion, message],
+    }),
+    feeCurrency: CUSD_ADDRESS,
+    type: "legacy",
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any);
+
+  const giftReceipt = await publicClient.waitForTransactionReceipt({
+    hash: giftHash,
+  });
+  if (giftReceipt.status !== "success") {
+    throw new Error("Gift transaction failed");
+  }
+
+  return giftHash;
 }
